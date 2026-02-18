@@ -1,1 +1,37 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/apps/steincares/quiz_metoject/fonts/Raleway-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/apps/steincares/quiz_metoject/fonts/Raleway-Bold.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/apps/steincares/quiz_metoject/fonts/Raleway-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+}
+
+@theme {
+  --color-blue-dark-metoject: #014f93;
+  --color-blue-light-metoject: #3d80c0;
+  --color-gold-dark-metoject: #e0af09;
+  --color-gold-light-metoject: #f2dc00;
+  
+  --font-raleway: "Raleway", sans-serif;
+
+  --width-9xl: 90rem;
+}
+
+button {
+  @apply cursor-pointer;
+}

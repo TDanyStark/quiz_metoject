@@ -1,0 +1,1 @@
+export const URL_BASE = "/apps/steincares/quiz_metoject";
