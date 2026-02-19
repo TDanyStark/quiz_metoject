@@ -74,16 +74,50 @@ import Header from "@/components/Header.astro";
               <ul id="options-list" class="space-y-3"></ul>
 
               <div
-                id="feedback-popup"
-                class="pointer-events-none absolute inset-x-5 top-22 z-20 hidden rounded-xl border-2 bg-white p-4 shadow-2xl"
-                role="status"
+                id="feedback-modal"
+                class="fixed inset-0 z-50 hidden items-center justify-center"
+                role="dialog"
+                aria-modal="true"
                 aria-live="polite"
               >
-                <p
-                  id="feedback-text"
-                  class="font-raleway text-sm font-bold md:text-base"
+                <button
+                  type="button"
+                  id="feedback-overlay"
+                  aria-label="Cerrar notificación"
+                  class="absolute inset-0 bg-slate-900/35"
+                ></button>
+
+                <div
+                  id="feedback-card"
+                  class="relative mx-4 w-full max-w-3xl rounded-4xl border-2 p-7 md:p-10"
                 >
-                </p>
+                  <button
+                    type="button"
+                    id="feedback-close"
+                    aria-label="Cerrar"
+                    class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border-2 border-current text-xl font-bold leading-none transition hover:opacity-90"
+                  >
+                    ×
+                  </button>
+
+                  <div class="mx-auto max-w-2xl text-center">
+                    <img
+                      id="feedback-icon"
+                      class="mx-auto mb-3 h-16 w-16 md:h-20 md:w-20"
+                      alt=""
+                    />
+                    <p
+                      id="feedback-title"
+                      class="mb-2 font-raleway text-4xl font-black leading-tight md:text-5xl"
+                    >
+                    </p>
+                    <p
+                      id="feedback-text"
+                      class="font-raleway text-base font-bold leading-snug md:text-2xl"
+                    >
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div class="mt-5 border-t border-slate-200 pt-4">
@@ -148,7 +182,12 @@ import Header from "@/components/Header.astro";
       const patientName = document.getElementById("patient-name");
       const patientAge = document.getElementById("patient-age");
 
-      const feedbackPopup = document.getElementById("feedback-popup");
+      const feedbackModal = document.getElementById("feedback-modal");
+      const feedbackOverlay = document.getElementById("feedback-overlay");
+      const feedbackCard = document.getElementById("feedback-card");
+      const feedbackClose = document.getElementById("feedback-close");
+      const feedbackIcon = document.getElementById("feedback-icon");
+      const feedbackTitle = document.getElementById("feedback-title");
       const feedbackText = document.getElementById("feedback-text");
 
       let selectedCase = null;
@@ -162,20 +201,55 @@ import Header from "@/components/Header.astro";
           .replaceAll("'", "&#39;");
 
       const hideFeedback = () => {
-        if (!feedbackPopup || !feedbackText) return;
-        feedbackPopup.classList.add("hidden");
-        feedbackPopup.classList.remove("border-green-500", "border-red-500");
-        feedbackText.classList.remove("text-green-700", "text-red-700");
+        if (!feedbackModal || !feedbackCard || !feedbackText || !feedbackTitle || !feedbackIcon)
+          return;
+        feedbackModal.classList.add("hidden");
+        feedbackModal.classList.remove("flex");
+        feedbackCard.classList.remove(
+          "border-yellow-metoject",
+          "bg-yellow-metoject",
+          "text-slate-900",
+          "border-blue-light-metoject",
+          "bg-blue-dark-metoject",
+          "text-white",
+        );
+        feedbackTitle.classList.remove("hidden");
+        feedbackIcon.removeAttribute("src");
+        feedbackIcon.setAttribute("alt", "");
+        feedbackTitle.textContent = "";
         feedbackText.textContent = "";
       };
 
       const showFeedback = (isCorrect, message) => {
-        if (!feedbackPopup || !feedbackText) return;
-        feedbackPopup.classList.remove("hidden");
-        feedbackPopup.classList.toggle("border-green-500", isCorrect);
-        feedbackPopup.classList.toggle("border-red-500", !isCorrect);
-        feedbackText.classList.toggle("text-green-700", isCorrect);
-        feedbackText.classList.toggle("text-red-700", !isCorrect);
+        if (!feedbackModal || !feedbackCard || !feedbackText || !feedbackTitle || !feedbackIcon)
+          return;
+
+        feedbackModal.classList.remove("hidden");
+        feedbackModal.classList.add("flex");
+        feedbackCard.classList.toggle("border-gold-dark-metoject", isCorrect);
+        feedbackCard.classList.toggle("bg-gold-dark-metoject", isCorrect);
+        feedbackCard.classList.toggle("text-slate-900", isCorrect);
+        feedbackCard.classList.toggle("border-blue-light-metoject", !isCorrect);
+        feedbackCard.classList.toggle("bg-blue-dark-metoject", !isCorrect);
+        feedbackCard.classList.toggle("text-white", !isCorrect);
+
+        feedbackIcon.setAttribute(
+          "src",
+          `${urlBase}/imgs/svg/${isCorrect ? "check.svg" : "x.svg"}`,
+        );
+        feedbackIcon.setAttribute(
+          "alt",
+          isCorrect ? "Respuesta correcta" : "Respuesta incorrecta",
+        );
+
+        if (isCorrect) {
+          feedbackTitle.classList.add("hidden");
+          feedbackTitle.textContent = "";
+        } else {
+          feedbackTitle.classList.remove("hidden");
+          feedbackTitle.textContent = "¡Intenta de nuevo!";
+        }
+
         feedbackText.textContent = message;
       };
 
@@ -302,6 +376,9 @@ import Header from "@/components/Header.astro";
         caseView?.classList.add("hidden");
         selectorView?.classList.remove("hidden");
       });
+
+      feedbackOverlay?.addEventListener("click", hideFeedback);
+      feedbackClose?.addEventListener("click", hideFeedback);
 
       renderPatientSelector();
     })();
