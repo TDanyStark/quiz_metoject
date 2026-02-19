@@ -45,16 +45,16 @@ import Header from "@/components/Header.astro";
               Cambiar paciente
             </button>
             <div class="flex items-center gap-3">
-              <img
-                id="case-badge"
-                class="h-12 w-auto"
-                alt="Insignia del caso"
-              />
               <h2
                 id="case-title"
                 class="font-raleway text-2xl font-black text-blue-dark-metoject"
               >
               </h2>
+              <img
+                id="case-badge"
+                class="h-20 lg:h-36 w-auto"
+                alt="Insignia del caso"
+              />
             </div>
           </div>
 
@@ -84,7 +84,7 @@ import Header from "@/components/Header.astro";
                   type="button"
                   id="feedback-overlay"
                   aria-label="Cerrar notificación"
-                  class="absolute inset-0 bg-slate-900/35"
+                  class="absolute inset-0 bg-slate-900/35 rounded-2xl"
                 ></button>
 
                 <div
@@ -206,11 +206,16 @@ import Header from "@/components/Header.astro";
         feedbackModal.classList.add("hidden");
         feedbackModal.classList.remove("flex");
         feedbackCard.classList.remove(
-          "border-yellow-metoject",
-          "bg-yellow-metoject",
+          "border-gold-dark-metoject",
+          "bg-linear-to-r",
+          "from-gold-dark-metoject",
+          "via-gold-light-metoject",
+          "to-gold-dark-metoject",
           "text-slate-900",
           "border-blue-light-metoject",
-          "bg-blue-dark-metoject",
+          "from-blue-dark-metoject",
+          "via-blue-light-metoject",
+          "to-blue-dark-metoject",
           "text-white",
         );
         feedbackTitle.classList.remove("hidden");
@@ -226,11 +231,16 @@ import Header from "@/components/Header.astro";
 
         feedbackModal.classList.remove("hidden");
         feedbackModal.classList.add("flex");
+        feedbackCard.classList.add("bg-linear-to-r");
         feedbackCard.classList.toggle("border-gold-dark-metoject", isCorrect);
-        feedbackCard.classList.toggle("bg-gold-dark-metoject", isCorrect);
+        feedbackCard.classList.toggle("from-gold-dark-metoject", isCorrect);
+        feedbackCard.classList.toggle("via-gold-light-metoject", isCorrect);
+        feedbackCard.classList.toggle("to-gold-dark-metoject", isCorrect);
         feedbackCard.classList.toggle("text-slate-900", isCorrect);
         feedbackCard.classList.toggle("border-blue-light-metoject", !isCorrect);
-        feedbackCard.classList.toggle("bg-blue-dark-metoject", !isCorrect);
+        feedbackCard.classList.toggle("from-blue-dark-metoject", !isCorrect);
+        feedbackCard.classList.toggle("via-blue-light-metoject", !isCorrect);
+        feedbackCard.classList.toggle("to-blue-dark-metoject", !isCorrect);
         feedbackCard.classList.toggle("text-white", !isCorrect);
 
         feedbackIcon.setAttribute(
@@ -362,12 +372,6 @@ import Header from "@/components/Header.astro";
             ? selectedCase.correctFeedback
             : selectedCase.incorrectFeedback;
           showFeedback(isCorrect, message);
-
-          if (isCorrect && optionsList) {
-            optionsList.querySelectorAll(".quiz-option").forEach((button) => {
-              if (button instanceof HTMLButtonElement) button.disabled = true;
-            });
-          }
         }
       });
 
