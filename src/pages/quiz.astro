@@ -18,6 +18,7 @@ import Header from "@/components/Header.astro";
         id="quiz-app"
         class="w-full max-w-7xl rounded-2xl border border-blue-light-metoject/30 bg-white/80 p-4 shadow-xl backdrop-blur-sm md:p-6"
         data-url-base={URL_BASE}
+        data-quiz-cases={JSON.stringify(quizData.cases)}
       >
         <div id="selector-view" class="space-y-2">
           <h1
@@ -28,6 +29,16 @@ import Header from "@/components/Header.astro";
           <p class="text-center font-raleway text-blue-dark-metoject/80 text-lg">
             Selecciona un paciente para resolver su caso clínico.
           </p>
+          <div class="mt-4 flex justify-end">
+            <button
+              id="reset-progress-selector"
+              data-action="reset-progress"
+              type="button"
+              class="rounded-lg bg-blue-dark-metoject px-4 py-2 font-raleway text-sm font-bold text-white transition hover:opacity-90"
+            >
+              Reiniciar progreso
+            </button>
+          </div>
           <div
             id="patients-grid"
             class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
@@ -37,13 +48,23 @@ import Header from "@/components/Header.astro";
 
         <div id="case-view" class="hidden space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <button
-              id="back-to-patients"
-              type="button"
-              class="rounded-lg bg-blue-dark-metoject px-4 py-2 font-raleway text-sm font-bold text-white transition hover:opacity-90"
-            >
-              Cambiar paciente
-            </button>
+            <div class="flex flex-wrap items-center gap-3">
+              <button
+                id="back-to-patients"
+                type="button"
+                class="rounded-lg bg-blue-dark-metoject px-4 py-2 font-raleway text-sm font-bold text-white transition hover:opacity-90"
+              >
+                Cambiar paciente
+              </button>
+              <button
+                id="reset-progress-case"
+                data-action="reset-progress"
+                type="button"
+                class="rounded-lg bg-blue-dark-metoject px-4 py-2 font-raleway text-sm font-bold text-white transition hover:opacity-90"
+              >
+                Reiniciar progreso
+              </button>
+            </div>
             <div class="flex items-center gap-3">
               <h2
                 id="case-title"
@@ -135,6 +156,7 @@ import Header from "@/components/Header.astro";
             </article>
 
             <aside
+              id="patient-aside"
               class="flex flex-col justify-end rounded-2xl bg-linear-to-b from-blue-light-metoject/20 to-blue-dark-metoject/10 p-3"
             >
               <img
@@ -143,6 +165,7 @@ import Header from "@/components/Header.astro";
                 alt="Paciente"
               />
               <div
+                id="patient-info-card"
                 class="rounded-xl bg-blue-dark-metoject p-3 text-center text-white"
               >
                 <p class="font-raleway text-2xl font-black" id="patient-name">
@@ -158,13 +181,44 @@ import Header from "@/components/Header.astro";
     <Footer/>
   </div>
 
-  <script is:inline define:vars={{ quizData }}>
+  <script>
+    // @ts-nocheck
+    import confetti from "canvas-confetti";
+
+    /**
+     * @typedef {Object} QuizCase
+     * @property {number} id
+     * @property {string} patientName
+     * @property {number} age
+     * @property {string} imageUrl
+     * @property {string} badgeUrl
+     * @property {string} title
+     * @property {string} description
+     * @property {string} question
+     * @property {string[]} options
+     * @property {number} correctAnswer
+     * @property {string} incorrectFeedback
+     * @property {string} correctFeedback
+     * @property {string[]} references
+     */
+
     (() => {
       const app = document.getElementById("quiz-app");
-      if (!app) return;
+      if (!(app instanceof HTMLElement)) return;
 
-      const cases = Array.isArray(quizData?.cases) ? quizData.cases : [];
+      /** @returns {QuizCase[]} */
+      const parseCases = () => {
+        try {
+          const parsed = JSON.parse(app.dataset.quizCases || "[]");
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      };
+
+      const cases = parseCases();
       const urlBase = app.dataset.urlBase || "";
+      const progressStorageKey = "quiz-metoject-progress-v1";
 
       const selectorView = document.getElementById("selector-view");
       const caseView = document.getElementById("case-view");
@@ -179,6 +233,8 @@ import Header from "@/components/Header.astro";
       const referencesList = document.getElementById("references-list");
 
       const patientImage = document.getElementById("patient-image");
+      const patientAside = document.getElementById("patient-aside");
+      const patientInfoCard = document.getElementById("patient-info-card");
       const patientName = document.getElementById("patient-name");
       const patientAge = document.getElementById("patient-age");
 
@@ -190,8 +246,61 @@ import Header from "@/components/Header.astro";
       const feedbackTitle = document.getElementById("feedback-title");
       const feedbackText = document.getElementById("feedback-text");
 
-      let selectedCase = null;
+      const validCaseIds = new Set(cases.map((item) => item.id));
 
+      /** @returns {Set<number>} */
+      const loadProgress = () => {
+        try {
+          const rawValue = window.localStorage.getItem(progressStorageKey);
+          if (!rawValue) return new Set();
+          const parsed = JSON.parse(rawValue);
+          if (!Array.isArray(parsed)) return new Set();
+          return new Set(
+            parsed.filter((value) => Number.isInteger(value) && validCaseIds.has(value)),
+          );
+        } catch {
+          return new Set();
+        }
+      };
+
+      let completedCaseIds = loadProgress();
+      /** @type {QuizCase | null} */
+      let selectedCase = null;
+      /** @type {number | null} */
+      let confettiIntervalId = null;
+
+      const saveProgress = () => {
+        try {
+          window.localStorage.setItem(
+            progressStorageKey,
+            JSON.stringify(Array.from(completedCaseIds)),
+          );
+        } catch {
+          return;
+        }
+      };
+
+      /** @param {number} caseId */
+      const isCaseCompleted = (caseId) => completedCaseIds.has(caseId);
+
+      /** @param {number} caseId */
+      const markCaseAsCompleted = (caseId) => {
+        if (isCaseCompleted(caseId)) return false;
+        completedCaseIds.add(caseId);
+        saveProgress();
+        return true;
+      };
+
+      const clearProgress = () => {
+        completedCaseIds = new Set();
+        try {
+          window.localStorage.removeItem(progressStorageKey);
+        } catch {
+          return;
+        }
+      };
+
+      /** @param {string | number} value */
       const escapeHTML = (value) =>
         String(value)
           .replaceAll("&", "&amp;")
@@ -199,6 +308,57 @@ import Header from "@/components/Header.astro";
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#39;");
+
+      const launchConfetti = () => {
+        const animationDuration = 3000;
+        const animationEnd = Date.now() + animationDuration;
+
+        if (confettiIntervalId) {
+          window.clearInterval(confettiIntervalId);
+          confettiIntervalId = null;
+        }
+
+        const fireRandomBurst = () => {
+          confetti({
+            particleCount: Math.floor(30 + Math.random() * 35),
+            spread: Math.floor(70 + Math.random() * 60),
+            startVelocity: Math.floor(30 + Math.random() * 20),
+            ticks: 120,
+            origin: {
+              x: Math.random(),
+              y: Math.max(0, Math.random() - 0.2),
+            },
+          });
+        };
+
+        fireRandomBurst();
+
+        confettiIntervalId = window.setInterval(() => {
+          if (Date.now() > animationEnd) {
+            if (confettiIntervalId) {
+              window.clearInterval(confettiIntervalId);
+              confettiIntervalId = null;
+            }
+            return;
+          }
+          fireRandomBurst();
+        }, 220);
+      };
+
+      /** @param {number} caseId */
+      const applyCaseCompletedStyles = (caseId) => {
+        const isCompleted = isCaseCompleted(caseId);
+
+        patientAside?.classList.toggle("from-blue-light-metoject/20", !isCompleted);
+        patientAside?.classList.toggle("to-blue-dark-metoject/10", !isCompleted);
+        patientAside?.classList.toggle("from-gold-light-metoject/20", isCompleted);
+        patientAside?.classList.toggle("to-gold-dark-metoject/20", isCompleted);
+
+        patientInfoCard?.classList.toggle("bg-blue-dark-metoject", !isCompleted);
+        patientInfoCard?.classList.toggle("text-white", !isCompleted);
+        patientInfoCard?.classList.toggle("bg-gold-dark-metoject", isCompleted);
+        patientInfoCard?.classList.toggle("text-slate-900", isCompleted);
+      };
 
       const hideFeedback = () => {
         if (!feedbackModal || !feedbackCard || !feedbackText || !feedbackTitle || !feedbackIcon)
@@ -225,6 +385,7 @@ import Header from "@/components/Header.astro";
         feedbackText.textContent = "";
       };
 
+      /** @param {boolean} isCorrect @param {string} message */
       const showFeedback = (isCorrect, message) => {
         if (!feedbackModal || !feedbackCard || !feedbackText || !feedbackTitle || !feedbackIcon)
           return;
@@ -263,6 +424,7 @@ import Header from "@/components/Header.astro";
         feedbackText.textContent = message;
       };
 
+      /** @param {number} caseId */
       const selectCase = (caseId) => {
         selectedCase = cases.find((item) => item.id === caseId) || null;
         if (!selectedCase) return;
@@ -295,6 +457,8 @@ import Header from "@/components/Header.astro";
 
         if (patientName) patientName.textContent = selectedCase.patientName;
         if (patientAge) patientAge.textContent = `${selectedCase.age} años`;
+
+        applyCaseCompletedStyles(selectedCase.id);
 
         if (optionsList) {
           optionsList.innerHTML = selectedCase.options
@@ -329,31 +493,71 @@ import Header from "@/components/Header.astro";
         if (!patientsGrid) return;
 
         patientsGrid.innerHTML = cases
-          .map(
-            (item) => `
+          .map((item) => {
+            const isCompleted = isCaseCompleted(item.id);
+            const selectorButtonClasses = isCompleted
+              ? "group relative rounded-2xl border border-gold-dark-metoject bg-white p-3 text-left shadow transition hover:-translate-y-1 hover:shadow-lg"
+              : "group relative rounded-2xl border border-blue-light-metoject/50 bg-white p-3 text-left shadow transition hover:-translate-y-1 hover:shadow-lg";
+            const infoCardClasses = isCompleted
+              ? "rounded-lg px-3 py-2 text-center bg-radial from-gold-light-metoject to-gold-dark-metoject text-slate-900"
+              : "rounded-lg px-3 py-2 text-center bg-radial from-blue-light-metoject to-blue-dark-metoject text-white";
+
+            return `
 							<button
 								type="button"
 								data-case-id="${item.id}"
-								class="group rounded-2xl border border-blue-light-metoject/50 bg-white p-3 text-left shadow transition hover:-translate-y-1 hover:shadow-lg"
+                class="${selectorButtonClasses}"
 							>
+                ${
+                  isCompleted
+                    ? `<span class="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-gold-dark-metoject shadow">
+                      <img
+                        src="${urlBase}/imgs/svg/check.svg"
+                        alt="Paciente completado"
+                        class="h-5 w-5"
+                      />
+                    </span>`
+                    : ""
+                }
 								<img
 									src="${urlBase}/imgs/pacientes/${item.imageUrl}"
 									alt="Paciente ${escapeHTML(item.patientName)}"
 									class="mx-auto h-64 w-full object-contain"
 								/>
-								<div class="rounded-lg bg-blue-dark-metoject px-3 py-2 text-white text-center bg-radial from-blue-light-metoject to-blue-dark-metoject ">
+                <div class="${infoCardClasses}">
 									<p class="font-raleway text-2xl font-black">${escapeHTML(item.patientName)}</p>
 									<p class="font-raleway text-lg">${item.age} años</p>
 								</div>
 							</button>
-						`,
-          )
+            `;
+          })
           .join("");
+      };
+
+      const handleResetProgress = () => {
+        const shouldReset = window.confirm(
+          "¿Deseas reiniciar el progreso? Se borrarán todos los pacientes completados.",
+        );
+        if (!shouldReset) return;
+
+        clearProgress();
+        hideFeedback();
+        renderPatientSelector();
+
+        if (selectedCase) {
+          applyCaseCompletedStyles(selectedCase.id);
+        }
       };
 
       app.addEventListener("click", (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
+
+        const resetButton = target.closest('[data-action="reset-progress"]');
+        if (resetButton instanceof HTMLElement) {
+          handleResetProgress();
+          return;
+        }
 
         const caseButton = target.closest("[data-case-id]");
         if (caseButton instanceof HTMLElement) {
@@ -371,6 +575,16 @@ import Header from "@/components/Header.astro";
           const message = isCorrect
             ? selectedCase.correctFeedback
             : selectedCase.incorrectFeedback;
+
+          if (isCorrect) {
+            const isFirstCompletion = markCaseAsCompleted(selectedCase.id);
+            if (isFirstCompletion) {
+              applyCaseCompletedStyles(selectedCase.id);
+              renderPatientSelector();
+              launchConfetti();
+            }
+          }
+
           showFeedback(isCorrect, message);
         }
       });
