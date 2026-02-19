@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="uuid-3eb2cfdb-5201-479d-9ac8-8cb302173c49" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 891.7 70">
+  <defs>
+    <radialGradient id="uuid-617cef7c-aced-4a93-99b8-8e23a75bb8c3" data-name="Degradado sin nombre 212" cx="690.03" cy="2080.23" fx="690.03" fy="2080.23" r="46.76" gradientTransform="translate(5.76 -3582.33) scale(1 1.74)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f2dc00"/>
+      <stop offset=".79" stop-color="#e0af09"/>
+    </radialGradient>
+    <radialGradient id="uuid-9830a310-5b42-4be1-be5f-737b7ad7fb31" data-name="Degradado sin nombre 406" cx="823.84" cy="2080.23" fx="823.84" fy="2080.23" r="46.76" gradientTransform="translate(5.76 -3582.33) scale(1 1.74)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#014f93"/>
+      <stop offset="1" stop-color="#1d3c71"/>
+    </radialGradient>
+    <radialGradient id="uuid-81846373-1fbd-438d-a151-b465e715f81e" data-name="Degradado sin nombre 406" cx="-4194.32" cy="1516.12" fx="-4194.32" fy="1516.12" r="881.1" gradientTransform="translate(2519.07 -2138.05) scale(.56 1.44)" xlink:href="#uuid-9830a310-5b42-4be1-be5f-737b7ad7fb31"/>
+  </defs>
+  <g id="uuid-d2f87da5-79d6-4534-857d-2f589d413a06" data-name="Capa 2">
+    <g>
+      <path d="M730.84,27.57c-11.52-17.97-25.08-27.57-38.95-27.57h-59.73c4.08,5,8,11.19,11.7,18.58l25.71,51.42h88.46l-27.19-42.43Z" style="fill: url(#uuid-617cef7c-aced-4a93-99b8-8e23a75bb8c3);"/>
+      <path d="M864.51,27.57c-11.52-17.97-25.08-27.57-38.95-27.57h-59.73c4.08,5,8,11.19,11.7,18.58l25.71,51.42h88.46l-27.19-42.43Z" style="fill: url(#uuid-9830a310-5b42-4be1-be5f-737b7ad7fb31);"/>
+      <path d="M571.4,2.25H0v67.75h635.05l-26.17-41.07c-11.08-17.39-24.13-26.68-37.48-26.68Z" style="fill: url(#uuid-81846373-1fbd-438d-a151-b465e715f81e);"/>
+    </g>
+  </g>
+</svg>
