@@ -18,7 +18,6 @@ import Header from "@/components/Header.astro";
         id="quiz-app"
         class="w-full max-w-7xl rounded-2xl border border-blue-light-metoject/30 bg-white/80 p-4 shadow-xl backdrop-blur-sm md:p-6"
         data-url-base={URL_BASE}
-        data-quiz-cases={JSON.stringify(quizData.cases)}
       >
         <div id="selector-view" class="space-y-2">
           <h1
@@ -181,39 +180,21 @@ import Header from "@/components/Header.astro";
     <Footer/>
   </div>
 
+  <script is:inline define:vars={{ quizCases: quizData.cases }}>
+    window.__QUIZ_CASES__ = quizCases;
+  </script>
+
   <script>
     // @ts-nocheck
     import confetti from "canvas-confetti";
-
-    /**
-     * @typedef {Object} QuizCase
-     * @property {number} id
-     * @property {string} patientName
-     * @property {number} age
-     * @property {string} imageUrl
-     * @property {string} badgeUrl
-     * @property {string} title
-     * @property {string} description
-     * @property {string} question
-     * @property {string[]} options
-     * @property {number} correctAnswer
-     * @property {string} incorrectFeedback
-     * @property {string} correctFeedback
-     * @property {string[]} references
-     */
-
+    
     (() => {
       const app = document.getElementById("quiz-app");
       if (!(app instanceof HTMLElement)) return;
 
-      /** @returns {QuizCase[]} */
       const parseCases = () => {
-        try {
-          const parsed = JSON.parse(app.dataset.quizCases || "[]");
-          return Array.isArray(parsed) ? parsed : [];
-        } catch {
-          return [];
-        }
+        const source = window.__QUIZ_CASES__;
+        return Array.isArray(source) ? source : [];
       };
 
       const cases = parseCases();
@@ -248,7 +229,6 @@ import Header from "@/components/Header.astro";
 
       const validCaseIds = new Set(cases.map((item) => item.id));
 
-      /** @returns {Set<number>} */
       const loadProgress = () => {
         try {
           const rawValue = window.localStorage.getItem(progressStorageKey);
@@ -264,9 +244,7 @@ import Header from "@/components/Header.astro";
       };
 
       let completedCaseIds = loadProgress();
-      /** @type {QuizCase | null} */
       let selectedCase = null;
-      /** @type {number | null} */
       let confettiIntervalId = null;
 
       const saveProgress = () => {
@@ -345,19 +323,67 @@ import Header from "@/components/Header.astro";
         }, 220);
       };
 
+      const CASE_COMPLETION_THEME_CLASSES = {
+        aside: {
+          pending: ["from-blue-light-metoject/20", "to-blue-dark-metoject/10"],
+          completed: ["from-gold-light-metoject/20", "to-gold-dark-metoject/20"],
+        },
+        infoCard: {
+          pending: ["bg-blue-dark-metoject", "text-white"],
+          completed: ["bg-gold-dark-metoject", "text-slate-900"],
+        },
+      };
+
+      /** @param {HTMLElement | null} element @param {boolean} isCompleted @param {{pending: string[], completed: string[]}} theme */
+      const applyCompletionTheme = (element, isCompleted, theme) => {
+        element?.classList.remove(...theme.pending, ...theme.completed);
+        element?.classList.add(...(isCompleted ? theme.completed : theme.pending));
+      };
+
       /** @param {number} caseId */
       const applyCaseCompletedStyles = (caseId) => {
         const isCompleted = isCaseCompleted(caseId);
 
-        patientAside?.classList.toggle("from-blue-light-metoject/20", !isCompleted);
-        patientAside?.classList.toggle("to-blue-dark-metoject/10", !isCompleted);
-        patientAside?.classList.toggle("from-gold-light-metoject/20", isCompleted);
-        patientAside?.classList.toggle("to-gold-dark-metoject/20", isCompleted);
+        applyCompletionTheme(patientAside, isCompleted, CASE_COMPLETION_THEME_CLASSES.aside);
+        applyCompletionTheme(
+          patientInfoCard,
+          isCompleted,
+          CASE_COMPLETION_THEME_CLASSES.infoCard,
+        );
+      };
 
-        patientInfoCard?.classList.toggle("bg-blue-dark-metoject", !isCompleted);
-        patientInfoCard?.classList.toggle("text-white", !isCompleted);
-        patientInfoCard?.classList.toggle("bg-gold-dark-metoject", isCompleted);
-        patientInfoCard?.classList.toggle("text-slate-900", isCompleted);
+      const FEEDBACK_THEME_CLASSES = {
+        correct: [
+          "border-gold-dark-metoject",
+          "from-gold-dark-metoject",
+          "via-gold-light-metoject",
+          "to-gold-dark-metoject",
+          "text-slate-900",
+        ],
+        incorrect: [
+          "border-blue-light-metoject",
+          "from-blue-dark-metoject",
+          "via-blue-light-metoject",
+          "to-blue-dark-metoject",
+          "text-white",
+        ],
+      };
+
+      const ALL_FEEDBACK_THEME_CLASSES = [
+        ...FEEDBACK_THEME_CLASSES.correct,
+        ...FEEDBACK_THEME_CLASSES.incorrect,
+      ];
+
+      /** @param {boolean} isCorrect */
+      const applyFeedbackTheme = (isCorrect) => {
+        if (!feedbackCard) return;
+
+        feedbackCard.classList.remove(...ALL_FEEDBACK_THEME_CLASSES);
+        feedbackCard.classList.add(
+          ...(isCorrect
+            ? FEEDBACK_THEME_CLASSES.correct
+            : FEEDBACK_THEME_CLASSES.incorrect),
+        );
       };
 
       const hideFeedback = () => {
@@ -365,19 +391,7 @@ import Header from "@/components/Header.astro";
           return;
         feedbackModal.classList.add("hidden");
         feedbackModal.classList.remove("flex");
-        feedbackCard.classList.remove(
-          "border-gold-dark-metoject",
-          "bg-linear-to-r",
-          "from-gold-dark-metoject",
-          "via-gold-light-metoject",
-          "to-gold-dark-metoject",
-          "text-slate-900",
-          "border-blue-light-metoject",
-          "from-blue-dark-metoject",
-          "via-blue-light-metoject",
-          "to-blue-dark-metoject",
-          "text-white",
-        );
+        feedbackCard.classList.remove("bg-linear-to-r", ...ALL_FEEDBACK_THEME_CLASSES);
         feedbackTitle.classList.remove("hidden");
         feedbackIcon.removeAttribute("src");
         feedbackIcon.setAttribute("alt", "");
@@ -393,16 +407,7 @@ import Header from "@/components/Header.astro";
         feedbackModal.classList.remove("hidden");
         feedbackModal.classList.add("flex");
         feedbackCard.classList.add("bg-linear-to-r");
-        feedbackCard.classList.toggle("border-gold-dark-metoject", isCorrect);
-        feedbackCard.classList.toggle("from-gold-dark-metoject", isCorrect);
-        feedbackCard.classList.toggle("via-gold-light-metoject", isCorrect);
-        feedbackCard.classList.toggle("to-gold-dark-metoject", isCorrect);
-        feedbackCard.classList.toggle("text-slate-900", isCorrect);
-        feedbackCard.classList.toggle("border-blue-light-metoject", !isCorrect);
-        feedbackCard.classList.toggle("from-blue-dark-metoject", !isCorrect);
-        feedbackCard.classList.toggle("via-blue-light-metoject", !isCorrect);
-        feedbackCard.classList.toggle("to-blue-dark-metoject", !isCorrect);
-        feedbackCard.classList.toggle("text-white", !isCorrect);
+        applyFeedbackTheme(isCorrect);
 
         feedbackIcon.setAttribute(
           "src",
