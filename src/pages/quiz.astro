@@ -1,7 +1,9 @@
 ---
 import { URL_BASE } from "@/config";
 import { quizData } from "@/data";
-import Layout from "../layouts/Layout.astro";
+import Layout from "@/layouts/Layout.astro";
+import Footer from "@/components/Footer.astro";
+import Header from "@/components/Header.astro";
 ---
 
 <Layout>
@@ -9,40 +11,26 @@ import Layout from "../layouts/Layout.astro";
     class="relative flex min-h-screen flex-col"
     style={`background-image: url('${URL_BASE}/imgs/bg-main.webp'); background-size: cover; background-position: center;`}
   >
-    <div class="absolute top-0 left-0 w-full overflow-hidden">
-      <img
-        class="max-w-60 lg:max-w-3xl"
-        src={`${URL_BASE}/imgs/svg/header hero.svg`}
-        alt="Encabezado"
-      />
-    </div>
-
-    <header class="flex justify-end p-4">
-      <img
-        class="w-36 md:w-40"
-        src={`${URL_BASE}/imgs/svg/logo_metoject.svg`}
-        alt="Logo metoject"
-      />
-    </header>
+    <Header />
 
     <main class="flex flex-1 items-center justify-center p-4 md:p-6">
       <section
         id="quiz-app"
-        class="w-full max-w-6xl rounded-2xl border border-blue-light-metoject/30 bg-white/80 p-4 shadow-xl backdrop-blur-sm md:p-6"
+        class="w-full max-w-7xl rounded-2xl border border-blue-light-metoject/30 bg-white/80 p-4 shadow-xl backdrop-blur-sm md:p-6"
         data-url-base={URL_BASE}
       >
-        <div id="selector-view" class="space-y-6">
+        <div id="selector-view" class="space-y-2">
           <h1
-            class="text-center font-raleway text-3xl font-black text-blue-dark-metoject md:text-4xl"
+            class="text-center font-raleway text-4xl font-black text-blue-dark-metoject md:text-5xl"
           >
             CASOS CLÍNICOS
           </h1>
-          <p class="text-center font-raleway text-blue-dark-metoject/80">
+          <p class="text-center font-raleway text-blue-dark-metoject/80 text-lg">
             Selecciona un paciente para resolver su caso clínico.
           </p>
           <div
             id="patients-grid"
-            class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
           >
           </div>
         </div>
@@ -74,12 +62,12 @@ import Layout from "../layouts/Layout.astro";
             <article class="relative rounded-2xl bg-white p-5 shadow-lg">
               <p
                 id="case-description"
-                class="mb-4 font-raleway text-sm leading-relaxed text-slate-700 md:text-base"
+                class="mb-4 font-raleway text-pretty leading-relaxed text-slate-700 md:text-lg"
               >
               </p>
               <h3
                 id="case-question"
-                class="mb-4 font-raleway text-lg font-bold text-blue-dark-metoject"
+                class="mb-4 font-raleway text-pretty text-xl font-bold text-blue-dark-metoject"
               >
               </h3>
 
@@ -133,18 +121,7 @@ import Layout from "../layouts/Layout.astro";
       </section>
     </main>
 
-    <footer class="flex items-end justify-between gap-4">
-      <img
-        class="block h-auto w-96 max-w-full lg:w-xl"
-        src={`${URL_BASE}/imgs/svg/footer 1.svg`}
-        alt="Footer 1"
-      />
-      <img
-        class="hidden h-auto w-96 lg:block"
-        src={`${URL_BASE}/imgs/svg/footer 2.svg`}
-        alt="Footer 2"
-      />
-    </footer>
+    <Footer/>
   </div>
 
   <script is:inline define:vars={{ quizData }}>
@@ -243,7 +220,7 @@ import Layout from "../layouts/Layout.astro";
 									<button
 										type="button"
 										data-option-index="${optionIndex}"
-										class="quiz-option w-full rounded-xl border-2 border-blue-dark-metoject/20 bg-blue-light-metoject/10 p-3 text-left font-raleway text-sm text-slate-800 transition hover:border-blue-dark-metoject hover:bg-blue-light-metoject/20"
+										class="quiz-option w-full rounded-xl border-2 border-blue-dark-metoject/20 bg-blue-light-metoject/10 p-3 text-left font-raleway text-slate-800 transition hover:border-blue-dark-metoject hover:bg-blue-light-metoject/20"
 									>
 										<span class="font-bold text-blue-dark-metoject">${String.fromCharCode(65 + optionIndex)}.</span>
 										${escapeHTML(option)}
@@ -278,11 +255,11 @@ import Layout from "../layouts/Layout.astro";
 								<img
 									src="${urlBase}/imgs/pacientes/${item.imageUrl}"
 									alt="Paciente ${escapeHTML(item.patientName)}"
-									class="mx-auto h-48 w-full object-contain"
+									class="mx-auto h-64 w-full object-contain"
 								/>
-								<div class="rounded-lg bg-blue-dark-metoject px-3 py-2 text-white">
-									<p class="font-raleway text-lg font-black">${escapeHTML(item.patientName)}</p>
-									<p class="font-raleway text-sm">${item.age} años</p>
+								<div class="rounded-lg bg-blue-dark-metoject px-3 py-2 text-white text-center bg-radial from-blue-light-metoject to-blue-dark-metoject ">
+									<p class="font-raleway text-2xl font-black">${escapeHTML(item.patientName)}</p>
+									<p class="font-raleway text-lg">${item.age} años</p>
 								</div>
 							</button>
 						`,

@@ -1,6 +1,8 @@
 ---
 import { URL_BASE } from "@/config";
 import Layout from "../layouts/Layout.astro";
+import Footer from "@/components/Footer.astro";
+import Header from "@/components/Header.astro";
 ---
 
 <Layout>
@@ -8,20 +10,7 @@ import Layout from "../layouts/Layout.astro";
     class="relative flex flex-col min-h-screen"
     style={`background-image: url('${URL_BASE}/imgs/bg-main.webp'); background-size: cover; background-position: center;`}
   >
-    <div class="absolute top-0 left-0 w-full overflow-hidden">
-      <img
-        class="max-w-60 lg:max-w-3xl"
-        src={`${URL_BASE}/imgs/svg/header hero.svg`}
-        alt="Logo metoject"
-      />
-    </div>
-    <header class="flex justify-end p-4">
-      <img
-        class="w-36 md:w-40"
-        src={`${URL_BASE}/imgs/svg/logo_metoject.svg`}
-        alt="Logo metoject"
-      />
-    </header>
+    <Header/>
     <main class="flex-1 flex flex-col justify-center items-center p-4 overflow-clip">
       <div>
         <img
@@ -39,13 +28,6 @@ import Layout from "../layouts/Layout.astro";
         </a>
       </div>
     </main>
-    <footer class="flex justify-between items-end gap-4">
-      <div>
-        <img class="block max-w-full w-96 lg:w-xl h-auto" src={`${URL_BASE}/imgs/svg/footer 1.svg`} alt="Footer 1" />
-      </div>
-      <div>
-        <img class="hidden lg:block w-96 h-auto" src={`${URL_BASE}/imgs/svg/footer 2.svg`} alt="Footer 2" />
-      </div>
-    </footer>
+    <Footer/>
   </div>
 </Layout>
