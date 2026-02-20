@@ -552,6 +552,11 @@ import Header from "@/components/Header.astro";
         if (selectedCase) {
           applyCaseCompletedStyles(selectedCase.id);
         }
+
+        if (selectedCase) {
+          caseView?.classList.add("hidden");
+          selectorView?.classList.remove("hidden");
+        }
       };
 
       app.addEventListener("click", (event) => {
